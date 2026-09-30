@@ -4,20 +4,20 @@ import { FilterTodos } from './FilterTodos';
 
 type FooterProps = {
   todos: Todo[];
-  status: TodoStatus;
-  setStatus: (value: TodoStatus) => void;
+  selectedFilter: TodoStatus;
+  setSelectedFilter: (value: TodoStatus) => void;
   handleClearCompleted: () => void;
 };
 
 export const Footer = ({
   todos,
-  status,
-  setStatus,
+  selectedFilter,
+  setSelectedFilter,
   handleClearCompleted,
 }: FooterProps) => {
   const activeTodos = getFilteredTodos({
     todos,
-    status: 'active',
+    selectedFilter: TodoStatus.Active,
   });
 
   const hasCompletedTodos = todos.filter(todo => todo.completed).length > 0;
@@ -28,7 +28,10 @@ export const Footer = ({
         {`${activeTodos.length} items left`}
       </span>
 
-      <FilterTodos status={status} setStatus={setStatus} />
+      <FilterTodos
+        selectedFilter={selectedFilter}
+        setSelectedFilter={setSelectedFilter}
+      />
 
       <button
         type="button"

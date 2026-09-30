@@ -6,7 +6,7 @@ import cn from 'classnames';
 type TodoListProps = {
   todos: Todo[];
   tempTodo: Todo | null;
-  deletingTodo: number | null;
+  deletingTodo: number[];
   handleDelete: (todoId: number) => void;
 };
 
@@ -52,7 +52,7 @@ export const TodoList = ({
           <div
             data-cy="TodoLoader"
             className={cn('modal overlay', {
-              'is-active': deletingTodo === todo.id,
+              'is-active': deletingTodo.includes(todo.id),
             })}
           >
             <div className="modal-background has-background-white-ter" />

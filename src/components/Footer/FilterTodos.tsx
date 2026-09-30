@@ -2,20 +2,23 @@ import cn from 'classnames';
 import { TodoStatus } from '../../types/Todo';
 
 type FilterTodosProps = {
-  status: TodoStatus;
-  setStatus: (value: TodoStatus) => void;
+  selectedFilter: TodoStatus;
+  setSelectedFilter: (value: TodoStatus) => void;
 };
 
-export const FilterTodos = ({ status, setStatus }: FilterTodosProps) => {
+export const FilterTodos = ({
+  selectedFilter,
+  setSelectedFilter,
+}: FilterTodosProps) => {
   return (
     <nav className="filter" data-cy="Filter">
       <a
         href="#/"
         className={cn('filter__link', {
-          selected: status === 'all',
+          selected: selectedFilter === TodoStatus.All,
         })}
         data-cy="FilterLinkAll"
-        onClick={() => setStatus('all')}
+        onClick={() => setSelectedFilter(TodoStatus.All)}
       >
         All
       </a>
@@ -23,10 +26,10 @@ export const FilterTodos = ({ status, setStatus }: FilterTodosProps) => {
       <a
         href="#/active"
         className={cn('filter__link', {
-          selected: status === 'active',
+          selected: selectedFilter === TodoStatus.Active,
         })}
         data-cy="FilterLinkActive"
-        onClick={() => setStatus('active')}
+        onClick={() => setSelectedFilter(TodoStatus.Active)}
       >
         Active
       </a>
@@ -34,10 +37,10 @@ export const FilterTodos = ({ status, setStatus }: FilterTodosProps) => {
       <a
         href="#/completed"
         className={cn('filter__link', {
-          selected: status === 'completed',
+          selected: selectedFilter === TodoStatus.Completed,
         })}
         data-cy="FilterLinkCompleted"
-        onClick={() => setStatus('completed')}
+        onClick={() => setSelectedFilter(TodoStatus.Completed)}
       >
         Completed
       </a>

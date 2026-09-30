@@ -15,10 +15,12 @@ export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [title, setTitle] = useState('');
-  const [status, setStatus] = useState<TodoStatus>('all');
+  const [selectedFilter, setSelectedFilter] = useState<TodoStatus>(
+    TodoStatus.All,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [deletingTodo, setDeletingTodo] = useState<number | null>(null);
+  const [deletingTodo, setDeletingTodo] = useState<number[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -51,14 +53,14 @@ export const App: React.FC = () => {
 
   //фокус після створення тудушки
   useEffect(() => {
-    if (tempTodo === null && deletingTodo === null) {
+    if (tempTodo === null && deletingTodo.length === 0) {
       inputRef.current?.focus();
     }
   }, [tempTodo, deletingTodo]);
 
   const filteredTodos = useMemo(
-    () => getFilteredTodos({ todos, status }),
-    [todos, status],
+    () => getFilteredTodos({ todos, selectedFilter }),
+    [todos, selectedFilter],
   );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -95,7 +97,7 @@ export const App: React.FC = () => {
 
   const handleDelete = (todoId: number) => {
     setError('');
-    setDeletingTodo(todoId);
+    setDeletingTodo(prev => [...prev, todoId]);
 
     deleteTodo(todoId)
       .then(() =>
@@ -104,30 +106,42 @@ export const App: React.FC = () => {
         ),
       )
       .catch(() => setError(ERROR_MESSAGES.delete))
-      .finally(() => setDeletingTodo(null));
+      .finally(() =>
+        setDeletingTodo(prev => prev.filter(itemId => itemId != todoId)),
+      );
   };
 
   const handleClearCompleted = () => {
     setError('');
     const completedTodos = todos.filter(todo => todo.completed);
+    const completedTodosId = completedTodos.map(todo => todo.id);
+
+    setDeletingTodo(prev => [...prev, ...completedTodosId]);
+
     const deleteRequests = completedTodos.map(todo => deleteTodo(todo.id));
 
-    Promise.allSettled(deleteRequests).then(result => {
-      const hasError = result.some(item => item.status === 'rejected');
-      const successRequest = completedTodos
-        .filter((todo, index) => result[index].status === 'fulfilled')
-        .map(todo => todo.id);
+    Promise.allSettled(deleteRequests)
+      .then(result => {
+        const hasError = result.some(item => item.status === 'rejected');
+        const successRequest = completedTodos
+          .filter((todo, index) => result[index].status === 'fulfilled')
+          .map(todo => todo.id);
 
-      setTodos(currentTodos =>
-        currentTodos.filter(todo => !successRequest.includes(todo.id)),
-      );
+        setTodos(currentTodos =>
+          currentTodos.filter(todo => !successRequest.includes(todo.id)),
+        );
 
-      inputRef.current?.focus();
+        inputRef.current?.focus();
 
-      if (hasError) {
-        setError(ERROR_MESSAGES.delete);
-      }
-    });
+        if (hasError) {
+          setError(ERROR_MESSAGES.delete);
+        }
+      })
+      .finally(() => {
+        setDeletingTodo(prev =>
+          prev.filter(prevId => !completedTodosId.includes(prevId)),
+        );
+      });
   };
 
   const showTodoList = todos.length > 0 || tempTodo !== null;
@@ -182,8 +196,8 @@ export const App: React.FC = () => {
         {todos.length > 0 && (
           <Footer
             todos={todos}
-            status={status}
-            setStatus={setStatus}
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
             handleClearCompleted={handleClearCompleted}
           />
         )}
